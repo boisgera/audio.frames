@@ -9,17 +9,15 @@ Frames Toolkit
 import doctest
 
 # Third-Party Libraries
-import numpy
-from numpy import array, ones, r_, zeros
+import numpy as np
 
 #
 # Metadata
 # ------------------------------------------------------------------------------
 #
+__main__ = (__name__ == "__main__")
 
-__author__ = u"Sébastien Boisgérault <Sebastien.Boisgerault@mines-paristech.fr>"
-__license__ = "MIT License"
-__version__ = None
+from audio.about_frames import *
 
 #
 # TODO
@@ -64,7 +62,7 @@ def split(data, frame_length, zero_pad=False, overlap=0, window=None):
 
       - `frames`: a sequence of numpy arrays.
     """
-    data = array(data, copy=False)
+    data = np.array(data, copy=False)
     length = len(data)
     if overlap >= frame_length:
         error = "overlap >= frame_length"
@@ -78,8 +76,8 @@ def split(data, frame_length, zero_pad=False, overlap=0, window=None):
         j = i + frame_length
     last_frame = data[i:j]
     if zero_pad and len(last_frame) < frame_length:
-        padding = zeros(frame_length - len(last_frame), dtype=data.dtype)
-        last_frame = r_[last_frame, padding]
+        padding = np.zeros(frame_length - len(last_frame), dtype=data.dtype)
+        last_frame = np.r_[last_frame, padding]
     frames.append(last_frame)
     if window:
         frames = [window(len(frame)) * frame for frame in frames]
@@ -114,8 +112,8 @@ def merge(frames, overlap=0, window=None):
         frames = [frame for frame in frames]
         num_frames = len(frames)
     length = sum([len(frame) for frame in frames]) - (num_frames - 1) * overlap
-    dtype = numpy.find_common_type([array(frame).dtype for frame in frames], [])
-    data = zeros(length, dtype=dtype)
+    dtype = np.find_common_type([array(frame).dtype for frame in frames], [])
+    data = np.zeros(length, dtype=dtype)
     offset = 0
     for i, frame in enumerate(frames):
         if window:
@@ -202,6 +200,6 @@ Merging Frames:
     """
     doctest.testmod()
 
-if __name__ == "__main__":
+if __main__:
     test()
 
