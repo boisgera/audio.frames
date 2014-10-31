@@ -198,10 +198,6 @@ Merging Frames:
     >>> merge(frame for frame in frames)
     array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     """
-    doctest.testmod()
 
 test_suite = doctest.DocTestSuite() # support for `python setup.py test`
-
-if __main__:
-    test()
 
