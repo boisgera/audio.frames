@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
-
 """
-Frames Toolkit
+Audio Frames Toolkit
 """
 
 # Python Standard Library
 import doctest
+import unittest
 
 # Third-Party Libraries
 import numpy as np
@@ -27,9 +27,7 @@ from audio.about_frames import *
 #   - support "init values" whose length match the overlap ? There is a use
 #     case in shrink, study it. By default, I'd say no support for this obscure
 #     feature.
-#   - support windows as a post-processing in split
-#   - implement merge, that is not trivial with overlap
-#   - implement windows as a pre-processing in merge.
+#   - change the API so that split returns only arrays.
 #
 
 #
@@ -112,7 +110,7 @@ def merge(frames, overlap=0, window=None):
         frames = [frame for frame in frames]
         num_frames = len(frames)
     length = sum([len(frame) for frame in frames]) - (num_frames - 1) * overlap
-    dtype = np.find_common_type([array(frame).dtype for frame in frames], [])
+    dtype = np.find_common_type([np.array(frame).dtype for frame in frames], [])
     data = np.zeros(length, dtype=dtype)
     offset = 0
     for i, frame in enumerate(frames):
@@ -129,6 +127,10 @@ def merge(frames, overlap=0, window=None):
 
 def test():
     """
+Preamble:
+
+    >>> import numpy as np
+
 Test array:
 
     >>> data = [1, 2, 3, 4, 5]
@@ -177,10 +179,9 @@ Overlapping Frames:
     ValueError: ...
 
 Windows:
-    >>> from numpy import hanning
-    >>> data = ones(24)
-    >>> frames = split(data, 6, window=hanning)
-    >>> all(all(frame == hanning(6)) for frame in frames)
+    >>> data = np.ones(24)
+    >>> frames = split(data, 6, window=np.hanning)
+    >>> all(all(frame == np.hanning(6)) for frame in frames)
     True
 
 Merging Frames:
@@ -192,13 +193,14 @@ Merging Frames:
     array([ 1,  2,  7,  5, 13,  8,  9])
     >>> merge(frames, overlap=2)
     array([ 1,  6, 15, 14,  9])
-    >>> from numpy import bartlett
-    >>> merge(frames, window=bartlett)
+    >>> merge(frames, window=np.bartlett)
     array([0, 2, 0, 0, 5, 0, 0, 8, 0])
     >>> merge(frame for frame in frames)
     array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     """
     doctest.testmod()
+
+test_suite = doctest.DocTestSuite() # support for `python setup.py test`
 
 if __main__:
     test()

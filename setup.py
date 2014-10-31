@@ -93,7 +93,7 @@ info = dict(
   requirements = {},
   scripts      = {},
   plugins      = {},
-  tests        = {},
+  tests        = dict(test_suite="audio.frames.test_suite"),
 )
 
 if __name__ == "__main__":
