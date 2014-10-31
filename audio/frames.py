@@ -125,8 +125,9 @@ def merge(frames, overlap=0, window=None):
 # ------------------------------------------------------------------------------
 #
 
-def test():
-    """
+__doc__ += \
+"""
+
 Preamble:
 
     >>> import numpy as np
@@ -197,7 +198,7 @@ Merging Frames:
     array([0, 2, 0, 0, 5, 0, 0, 8, 0])
     >>> merge(frame for frame in frames)
     array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    """
+"""
 
 test_suite = doctest.DocTestSuite() # support for `python setup.py test`
 
