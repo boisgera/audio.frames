@@ -7,7 +7,6 @@ Audio Frames Toolkit
 # Python Standard Library
 from __future__ import division
 import doctest
-import unittest
 
 # Third-Party Libraries
 import numpy as np
@@ -252,5 +251,18 @@ Merging Frames
     array([1, 2, 3, 4, 5, 6, 7, 8, 9])
 """
 
-test_suite = doctest.DocTestSuite() # support for `python setup.py test`
+import audio.frames
+
+# support for `python setup.py test`
+test_suite = doctest.DocTestSuite(audio.frames)
+
+def test():
+    doctest.testmod(audio.frames)
+
+# This is a bad idea ... direct execution of a file nested in the package is
+# a recipe for failure. Define a test function and migrate the test script to
+# the top-level.
+if __main__:
+    test()
+
 
