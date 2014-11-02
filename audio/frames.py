@@ -23,11 +23,7 @@ from audio.about_frames import *
 # TODO
 # ------------------------------------------------------------------------------
 #
-#   - support n-dim. array with an axis parameters (defaults to last axis: -1)
-#   - support "init values" whose length match the overlap ? There is a use
-#     case in shrink, study it. By default, I'd say no support for this obscure
-#     feature.
-#   - change the API so that split returns only arrays.
+#   - support split/merge of multi-channel data.
 #
 
 #
@@ -65,7 +61,9 @@ def split(data, frame_length, pad=False, overlap=0, window=None):
     if overlap >= frame_length:
         error = "overlap >= frame_length"
         raise ValueError(error)
-    num_frames, extra = divmod(length - overlap, frame_length - overlap)
+    frame_shift = frame_length - overlap
+    num_frames, remain = divmod(length - overlap, frame_shift)
+    extra = (frame_shift - remain) % frame_shift
 
     if extra:
         if pad is False:
@@ -73,6 +71,7 @@ def split(data, frame_length, pad=False, overlap=0, window=None):
             raise ValueError(error)
         else:
             data = np.r_[data, np.zeros(extra, dtype=data.dtype)]
+            length = len(data)
             num_frames += 1
 
     if window is None:
@@ -82,27 +81,21 @@ def split(data, frame_length, pad=False, overlap=0, window=None):
     frames = np.empty((num_frames, frame_length), dtype=data.dtype)
 
     for i in range(num_frames):
-        start = i * (frame_length - overlap)
+        start = i * frame_shift
         stop  = start + frame_length
-
-        print extra
-        print "***", data[start:stop]
-
         frames[i] = window_ * data[start:stop]
 
     return frames
 
-# TODO: do not require `frames` to support `len`, so that generator can
-#       be used.
 
 def merge(frames, overlap=0, window=None):
     """
-    Merge a sequence of frames.
+    Merge a sequence of frames of the same length.
 
     Arguments
     ---------
 
-      - `frames`: a sequence of frames,
+      - `frames`: a sequence of frames with the same length,
 
       - `overlap`: number of overlapping samples between successive frames,
         defaults to `0`.
@@ -115,20 +108,24 @@ def merge(frames, overlap=0, window=None):
 
       - `data`: a numpy array.
 """
-    try:
-        num_frames = len(frames)
-    except TypeError:
-        frames = [frame for frame in frames]
-        num_frames = len(frames)
-    length = sum([len(frame) for frame in frames]) - (num_frames - 1) * overlap
-    dtype = np.find_common_type([np.array(frame).dtype for frame in frames], [])
-    data = np.zeros(length, dtype=dtype)
-    offset = 0
-    for i, frame in enumerate(frames):
-        if window:
-            frame = window(len(frame)) * frame
-        data[offset:offset+len(frame)] += frame
-        offset += len(frame) - overlap
+    frames = np.array(frames, copy=False)
+    num_frames, frame_length = np.shape(frames)
+    if overlap >= frame_length:
+        error = "overlap >= frame_length"
+        raise ValueError(error)
+    frame_shift = frame_length - overlap
+    if window is None:
+        window = np.ones
+    window_ = window(frame_length)
+
+    data = np.zeros(frame_length + (num_frames - 1) * frame_shift, 
+                    dtype=frames.dtype)
+    
+    for i in range(num_frames):
+        start = i * frame_shift
+        stop  = start + frame_length
+        data[start:stop] += window_ * frames[i]
+
     return data
 
 #
@@ -166,17 +163,17 @@ Basic Usage
     >>> split(data, 3)
     array([[1, 2, 3],
            [4, 5, 6]])
-    >>> split(data, 4) # doctest: +ELLIPSIS
+    >>> split(data, 4) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValueError: ...
-    >>> split(data, 5) # doctest: +ELLIPSIS
+    >>> split(data, 5) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValueError: ...
     >>> split(data, 6)
     array([[1, 2, 3, 4, 5, 6]])
-    >>> split(data, 7) # doctest: +ELLIPSIS
+    >>> split(data, 7) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValueError: ...
@@ -215,12 +212,25 @@ Overlapping Frames
 --------------------------------------------------------------------------------
 
     >>> split(data, 2, overlap=1)
-    [array([1, 2]), array([2, 3]), array([3, 4]), array([4, 5])]
-    >>> split(data, 3, overlap=1)
-    [array([1, 2, 3]), array([3, 4, 5])]
+    array([[1, 2],
+           [2, 3],
+           [3, 4],
+           [4, 5],
+           [5, 6]])
+    >>> split(data, 3, overlap=1) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: ...
+    >>> split(data, 3, pad=True, overlap=1)
+    array([[1, 2, 3],
+           [3, 4, 5],
+           [5, 6, 0]])
     >>> split(data, 3, overlap=2)
-    [array([1, 2, 3]), array([2, 3, 4]), array([3, 4, 5])]
-    >>> split(data, 3, overlap=3) # doctest: +ELLIPSIS
+    array([[1, 2, 3],
+           [2, 3, 4],
+           [3, 4, 5],
+           [4, 5, 6]])
+    >>> split(data, 3, overlap=3) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValueError: ...
@@ -247,8 +257,6 @@ Merging Frames
     array([ 1,  6, 15, 14,  9])
     >>> merge(frames, window=np.bartlett)
     array([0, 2, 0, 0, 5, 0, 0, 8, 0])
-    >>> merge(frame for frame in frames)
-    array([1, 2, 3, 4, 5, 6, 7, 8, 9])
 """
 
 
