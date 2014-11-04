@@ -12,6 +12,7 @@ import sys
 try:
     import pip
     import setuptools
+    import pkg_resources
 except ImportError:
     error = "pip is not installed, refer to <{url}> for instructions."
     raise ImportError(error.format(url="http://pip.readthedocs.org"))
