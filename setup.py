@@ -19,70 +19,22 @@ except ImportError:
 # Numpy
 import numpy
 
-# Extra Third-Party Libraries (automated install)
-setup_requires = ["about>=4.0"]
+# Extra Third-Party Libraries
+sys.path.insert(1, ".lib")
+try:
+    setup_requires = ["about>=4.0.0"]
+    require = lambda *r: pkg_resources.WorkingSet().require(*r)
+    require(*setup_requires)
+    import about
+except pkg_resources.DistributionNotFound:
+    error = """{req!r} not found; install it locally with:
 
-def trueish(value):
-    if not isinstance(value, str):
-        return bool(value)
-    else:
-        value = value.lower()
-        if value in ("y", "yes", "t", "true", "on", "1"):
-            return True
-        elif value in ("", "n", "no", "f", "false", "off", "0"):
-            return False
-        else:
-            raise TypeError("invalid bool value {0!r}, use 'true' or 'false'.")
-
-setuptools.Distribution.global_options.append(
-  ("lib", "l", "install setup dependencies")
-)
-
-def lib_required():
-    LIB = False
-    if "-l" in sys.argv:
-        sys.argv.remove("-l")
-        LIB = True
-    elif "--lib" in sys.argv:
-        sys.argv.remove("--lib")
-        LIB = True
-    elif os.path.isfile("setup.cfg"):
-        parser = ConfigParser.RawConfigParser()
-        parser.read("setup.cfg")
-        try: 
-            LIB = trueish(parser.get("global", "lib"))
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-            pass
-    return LIB
-
-def install_lib(setup_requires, libdir):
-    if os.path.exists(libdir):
-        shutil.rmtree(libdir)
-    os.mkdir(libdir)
-    pip_install = pip.commands["install"]().main
-    for package in setup_requires:
-        options = ["--quiet", "--target=" + libdir, "--ignore-installed"]
-        error = pip_install(options + [package])
-        if error:
-            raise RuntimeError("failed to install {0}.".format(package))
-    os.chmod(libdir, 0o777)
-    for dir, subdirs, others in os.walk(libdir):
-        files = [os.path.join(dir, file) for file in subdirs + others]
-        for file in files:
-            os.chmod(file , 0o777)
-    assert sys.path[0] in ("", os.getcwd())
-    sys.path.insert(1, libdir)
-
-if lib_required():
-    install_lib(setup_requires, "lib")
-
-assert sys.path[0] in ("", os.getcwd())
-sys.path.insert(1, "lib")
-
+    pip install --target=.lib --ignore-installed {req!r}
+"""
+    raise ImportError(error.format(req=" ".join(setup_requires)))
 import about
 
-# ------------------------------------------------------------------------------
-
+# This Package
 sys.path.insert(1, "audio")
 import about_frames
 
