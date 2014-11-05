@@ -20,8 +20,11 @@ except ImportError:
 # Numpy
 import numpy
 
+def local(path):
+    return os.path.join(os.path.dirname(__file__), path)
+
 # Extra Third-Party Libraries
-sys.path.insert(1, ".lib")
+sys.path.insert(1, local(".lib"))
 try:
     setup_requires = ["about>=4.0.0"]
     require = lambda *r: pkg_resources.WorkingSet().require(*r)
@@ -36,7 +39,7 @@ except pkg_resources.DistributionNotFound:
 import about
 
 # This Package
-sys.path.insert(1, "audio")
+sys.path.insert(1, local("audio"))
 import about_frames
 
 info = dict(
