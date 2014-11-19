@@ -2,7 +2,7 @@
 
 metadata = dict(
   __name__        = "audio.frames",
-  __version__     = "2.0.4",
+  __version__     = "2.3.0",
   __license__     = "MIT License",  
   __author__      = u"Sébastien Boisgérault <Sebastien.Boisgerault@mines-paristech.fr>",
   __url__         = None,
